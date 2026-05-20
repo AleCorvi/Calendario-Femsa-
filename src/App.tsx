@@ -390,13 +390,9 @@ export default function App() {
             title="Ver Historial de Versiones"
             id="femsa-header-title-btn"
           >
-            <div className="p-1.5 bg-red-600 rounded-lg group-hover:bg-red-700 transition-colors shadow-lg shadow-red-900/30 shrink-0">
-              <Calendar className="w-5 h-5 text-white" />
-            </div>
             <div className="text-center">
-              <h2 className="text-base font-bold tracking-tight text-white flex items-center justify-center gap-1">
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center justify-center gap-1">
                 Calendario Planta Alcorta
-                <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
               </h2>
               <p className="text-[10px] text-gray-400 font-mono uppercase tracking-widest leading-none">
                 Versión 3.45 WEB
@@ -405,15 +401,6 @@ export default function App() {
                 by Ale Corvi © 2026
               </p>
             </div>
-          </button>
-
-          <button
-            onClick={() => setIsAboutOpen(true)}
-            className="absolute right-4 p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all cursor-pointer border border-slate-800 active:bg-slate-950"
-            aria-label="Acerca de"
-            id="about-info-trigger"
-          >
-            <Info className="w-5 h-5" />
           </button>
         </header>
 
@@ -428,9 +415,6 @@ export default function App() {
               
               {/* Spinner 1: Month Selection */}
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] text-slate-400 font-mono font-semibold uppercase tracking-wider text-center truncate min-h-[15px]">
-                  Mes
-                </label>
                 <div className="relative">
                   <select
                     value={selectedMonth}
@@ -454,9 +438,6 @@ export default function App() {
 
               {/* Spinner 2: Year Selection */}
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] text-slate-400 font-mono font-semibold uppercase tracking-wider text-center truncate min-h-[15px]">
-                  Año
-                </label>
                 <div className="relative">
                   <select
                     value={selectedYear}
@@ -480,9 +461,6 @@ export default function App() {
 
               {/* Spinner 3: Group Selection */}
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] text-slate-400 font-mono font-semibold uppercase tracking-wider text-center truncate min-h-[15px]">
-                  Grupo
-                </label>
                 <div className="relative">
                   <select
                     value={selectedGroup}
