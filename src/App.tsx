@@ -665,10 +665,7 @@ export default function App() {
 
         </main>
 
-        {/* RECT/FOOTER DETAILS */}
-        <footer className="p-3 text-center border-t border-slate-800/80 bg-slate-950 text-[10px] text-slate-500 font-mono uppercase tracking-widest">
-          <span className="font-bold italic normal-case">by Ale Corvi</span> · © {realCurrentYear}
-        </footer>
+
 
       </div>
 
