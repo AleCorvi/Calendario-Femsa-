@@ -515,7 +515,7 @@ export default function App() {
             </div>
 
             {/* Grid Days - exactly 42 slots */}
-            <div className="grid grid-cols-7 gap-1.5 pt-[2px] pb-0 flex-1 content-center min-h-[220px] sm:min-h-[240px]">
+            <div className="grid grid-cols-7 gap-1.5 pt-0 pb-0 flex-1 content-center min-h-[220px] sm:min-h-[240px]">
               {cells.map((cell, idx) => {
                 const isToday =
                   cell.day !== null &&
@@ -550,7 +550,7 @@ export default function App() {
             </div>
 
             {/* Previous, Home/Franco & Next navigation styled as Mañana, Franco & Noche buttons */}
-            <div className="grid grid-cols-3 gap-2 mt-[6px] pt-1.5 border-t border-slate-800" id="month-navigation-controls">
+            <div className="grid grid-cols-3 gap-2 mt-0 pt-1.5 border-t border-slate-800" id="month-navigation-controls">
               
               {/* Previous month (Mañana reference) */}
               <button
