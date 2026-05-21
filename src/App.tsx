@@ -502,7 +502,7 @@ export default function App() {
         <div className="absolute top-0 left-1/4 w-1/2 h-32 bg-red-500/10 blur-3xl pointer-events-none rounded-full" />
         <div className="absolute bottom-0 right-1/4 w-1/2 h-32 bg-green-500/5 blur-3xl pointer-events-none rounded-full" />
 
-        {/* HEADER BAR */}
+        {/* HEADER BAR - VER 3.45 */}
         <header className="py-2.5 px-4 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-10 flex items-center justify-center relative">
           <button
             onClick={() => setIsAboutOpen(true)}
@@ -514,10 +514,10 @@ export default function App() {
               <h2 className="text-5xl sm:text-6xl font-extrabold tracking-tight text-white flex items-center justify-center gap-1">
                 Planta Alcorta
               </h2>
-              <p className="text-[9px] text-gray-400 font-mono uppercase tracking-widest leading-none">
+              <p className="text-[11px] text-gray-400 font-mono uppercase tracking-widest leading-none mt-1">
                 Versión 3.45 WEB
               </p>
-              <p className="text-[9px] text-gray-400 font-bold italic mt-0.5 leading-none">
+              <p className="text-[11px] text-gray-400 font-bold italic mt-1 leading-none">
                 by Ale Corvi © 2026
               </p>
             </div>
