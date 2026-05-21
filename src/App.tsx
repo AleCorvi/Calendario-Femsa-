@@ -515,7 +515,7 @@ export default function App() {
             </div>
 
             {/* Grid Days - exactly 42 slots */}
-            <div className="grid grid-cols-7 gap-1.5 pt-1 pb-1 flex-1 content-center min-h-[220px] sm:min-h-[240px]">
+            <div className="grid grid-cols-7 gap-1.5 pt-[2px] pb-0 flex-1 content-center min-h-[220px] sm:min-h-[240px]">
               {cells.map((cell, idx) => {
                 const isToday =
                   cell.day !== null &&
@@ -550,12 +550,12 @@ export default function App() {
             </div>
 
             {/* Previous, Home/Franco & Next navigation styled as Mañana, Franco & Noche buttons */}
-            <div className="grid grid-cols-3 gap-2 mt-1 pt-1.5 border-t border-slate-800" id="month-navigation-controls">
+            <div className="grid grid-cols-3 gap-2 mt-[6px] pt-1.5 border-t border-slate-800" id="month-navigation-controls">
               
               {/* Previous month (Mañana reference) */}
               <button
                 onClick={handlePrevMonth}
-                className="flex items-center justify-center gap-1 py-2.5 px-0.5 bg-linear-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 active:from-yellow-600 active:to-yellow-700 text-slate-950 font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
+                className="h-[45px] flex items-center justify-center gap-1 px-0.5 bg-linear-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 active:from-yellow-600 active:to-yellow-700 text-slate-950 font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
                 id="prev-month-btn"
                 title="Ir al mes anterior (Mañana)"
               >
@@ -566,7 +566,7 @@ export default function App() {
               {/* Reset to Today (Franco reference and Secret Config trigger) */}
               <button
                 onClick={handleFrancoClick}
-                className="flex flex-col items-center justify-center py-2.5 px-0.5 bg-linear-to-r from-[#5aff5a] to-[#257500] hover:from-[#6fff6f] hover:to-[#2e9200] text-slate-950 font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
+                className="h-[45px] flex flex-col items-center justify-center px-0.5 bg-linear-to-r from-[#5aff5a] to-[#257500] hover:from-[#6fff6f] hover:to-[#2e9200] text-slate-950 font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
                 id="franco-today-btn"
                 title="Volver a Hoy (Franco) / Toca 3 veces para Configuración UVW"
               >
@@ -576,7 +576,7 @@ export default function App() {
               {/* Next month (Noche reference) */}
               <button
                 onClick={handleNextMonth}
-                className="flex items-center justify-center gap-1 py-2.5 px-0.5 bg-linear-to-r from-[#fd4ecc] to-[#b60c9e] hover:from-[#fe6bda] hover:to-[#cc11b2] text-white font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
+                className="h-[45px] flex items-center justify-center gap-1 px-0.5 bg-linear-to-r from-[#fd4ecc] to-[#b60c9e] hover:from-[#fe6bda] hover:to-[#cc11b2] text-white font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
                 id="next-month-btn"
                 title="Ir al mes siguiente (Noche)"
               >
