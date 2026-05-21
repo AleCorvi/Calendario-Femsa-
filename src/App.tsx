@@ -412,13 +412,13 @@ export default function App() {
         </header>
 
         {/* CONTAINER CONTENT */}
-        <main className="p-3 sm:p-4 space-y-3 sm:space-y-4 flex-1 flex flex-col justify-start">
+        <main className="px-4 pt-2 pb-4 space-y-3 flex-1 flex flex-col justify-start">
           
           {/* SECTION A: DROP DOWN CONTROLS */}
-          <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80 space-y-3 shadow-inner" id="picker-controls">
+          <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 space-y-4 shadow-inner" id="picker-controls">
             
             {/* Top row: selectors */}
-            <div className="grid grid-cols-3 gap-2.5 items-end">
+            <div className="grid grid-cols-3 gap-3 items-end">
               
               {/* Spinner 1: Month Selection */}
               <div className="flex flex-col gap-1">
@@ -426,7 +426,7 @@ export default function App() {
                   <select
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(e.target.value)}
-                    className={`w-full py-2 px-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs sm:text-sm font-bold tracking-wide focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 cursor-pointer appearance-none ${
+                    className={`w-full p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-sm font-bold tracking-wide focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 cursor-pointer appearance-none ${
                       isMonthActual ? 'text-white' : 'text-red-500 font-extrabold'
                     }`}
                     id="combo1-month-select"
@@ -449,7 +449,7 @@ export default function App() {
                   <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-                    className={`w-full py-2 px-2.5 rounded-xl border border-slate-800 bg-slate-900 text-xs sm:text-sm font-bold tracking-wide focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 cursor-pointer appearance-none ${
+                    className={`w-full p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-sm font-bold tracking-wide focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 cursor-pointer appearance-none ${
                       isYearActual ? 'text-white' : 'text-red-500 font-extrabold'
                     }`}
                     id="combo2-year-select"
@@ -472,7 +472,7 @@ export default function App() {
                   <select
                     value={selectedGroup}
                     onChange={(e) => handleGroupChange(e.target.value)}
-                    className="w-full py-2 px-2.5 rounded-xl border border-slate-800 bg-slate-900 text-white text-xs sm:text-sm font-bold tracking-wider focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 cursor-pointer appearance-none"
+                    className="w-full p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-white text-sm font-bold tracking-wider focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 cursor-pointer appearance-none"
                     id="combo3-group-select"
                   >
                     {groupsList.map((g) => (
@@ -498,14 +498,14 @@ export default function App() {
           </div>
 
           {/* SECTION B: SHIFT CALENDAR GRID */}
-          <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800 shadow-lg flex-1 flex flex-col justify-between" id="calendar-grid-card">
+          <div className="bg-slate-950/80 p-3 sm:p-4 rounded-2xl border border-slate-800 shadow-lg flex-1 flex flex-col justify-between" id="calendar-grid-card">
             
             {/* Weekday headers LU to DO */}
-            <div className="grid grid-cols-7 text-center pb-1.5 border-b border-slate-800">
+            <div className="grid grid-cols-7 text-center pb-1 border-b border-slate-800">
               {['LU', 'MA', 'MI', 'JU', 'VI', 'SA', 'DO'].map((dayName) => (
                 <span
                   key={dayName}
-                  className={`text-[11px] font-bold tracking-wider py-0.5 ${
+                  className={`text-xs font-bold tracking-wider py-0.5 ${
                     ['SA', 'DO'].includes(dayName) ? 'text-red-400' : 'text-slate-400'
                   }`}
                 >
@@ -515,7 +515,7 @@ export default function App() {
             </div>
 
             {/* Grid Days - exactly 42 slots */}
-            <div className="grid grid-cols-7 gap-1 pt-2 sm:pt-3 flex-1 content-center min-h-[200px] sm:min-h-[240px]">
+            <div className="grid grid-cols-7 gap-1.5 pt-1 pb-1 flex-1 content-center min-h-[220px] sm:min-h-[240px]">
               {cells.map((cell, idx) => {
                 const isToday =
                   cell.day !== null &&
@@ -550,38 +550,38 @@ export default function App() {
             </div>
 
             {/* Previous, Home/Franco & Next navigation styled as Mañana, Franco & Noche buttons */}
-            <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-800" id="month-navigation-controls">
+            <div className="grid grid-cols-3 gap-2 mt-1 pt-1.5 border-t border-slate-800" id="month-navigation-controls">
               
               {/* Previous month (Mañana reference) */}
               <button
                 onClick={handlePrevMonth}
-                className="flex items-center justify-center gap-1 py-1.5 sm:py-2.5 px-0.5 bg-linear-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 active:from-yellow-600 active:to-yellow-700 text-slate-950 font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
+                className="flex items-center justify-center gap-1 py-2.5 px-0.5 bg-linear-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 active:from-yellow-600 active:to-yellow-700 text-slate-950 font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
                 id="prev-month-btn"
                 title="Ir al mes anterior (Mañana)"
               >
-                <ChevronLeft className="w-3.5 h-3.5 text-slate-950 shrink-0 select-none" />
-                <span className="font-mono tracking-wider font-extrabold text-[10px] sm:text-[11px] uppercase">MAÑANA</span>
+                <ChevronLeft className="w-3.5 h-3.5 text-slate-950 shrink-0" />
+                <span className="font-mono tracking-wider font-extrabold text-[11px] uppercase">MAÑANA</span>
               </button>
 
               {/* Reset to Today (Franco reference and Secret Config trigger) */}
               <button
                 onClick={handleFrancoClick}
-                className="flex flex-col items-center justify-center py-1.5 sm:py-2.5 px-0.5 bg-linear-to-r from-[#5aff5a] to-[#257500] hover:from-[#6fff6f] hover:to-[#2e9200] text-slate-950 font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
+                className="flex flex-col items-center justify-center py-2.5 px-0.5 bg-linear-to-r from-[#5aff5a] to-[#257500] hover:from-[#6fff6f] hover:to-[#2e9200] text-slate-950 font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
                 id="franco-today-btn"
                 title="Volver a Hoy (Franco) / Toca 3 veces para Configuración UVW"
               >
-                <span className="font-mono tracking-wider font-extrabold text-[10px] sm:text-[11px] uppercase">FRANCO</span>
+                <span className="font-mono tracking-wider font-extrabold text-[11px] uppercase">FRANCO</span>
               </button>
 
               {/* Next month (Noche reference) */}
               <button
                 onClick={handleNextMonth}
-                className="flex items-center justify-center gap-1 py-1.5 sm:py-2.5 px-0.5 bg-linear-to-r from-[#fd4ecc] to-[#b60c9e] hover:from-[#fe6bda] hover:to-[#cc11b2] text-white font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
+                className="flex items-center justify-center gap-1 py-2.5 px-0.5 bg-linear-to-r from-[#fd4ecc] to-[#b60c9e] hover:from-[#fe6bda] hover:to-[#cc11b2] text-white font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
                 id="next-month-btn"
                 title="Ir al mes siguiente (Noche)"
               >
-                <span className="font-mono tracking-wider font-extrabold text-[10px] sm:text-[11px] uppercase">NOCHE</span>
-                <ChevronRight className="w-3.5 h-3.5 text-white shrink-0 select-none" />
+                <span className="font-mono tracking-wider font-extrabold text-[11px] uppercase">NOCHE</span>
+                <ChevronRight className="w-3.5 h-3.5 text-white shrink-0" />
               </button>
 
             </div>
@@ -608,7 +608,7 @@ export default function App() {
 
                 <div className="grid grid-cols-2 gap-3" id="uvw-radio-buttons">
                   <button
-                    onClick={() => handleUvwRotationChange('normal')}
+                     onClick={() => handleUvwRotationChange('normal')}
                     className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-pointer ${
                       uvwRotation === 'normal'
                         ? 'bg-slate-900 border-red-500 ring-1 ring-red-500/20 text-white'
@@ -644,8 +644,6 @@ export default function App() {
           </AnimatePresence>
 
         </main>
-
-
 
       </div>
 
