@@ -122,25 +122,6 @@ export default function App() {
   );
   const [selectedYear, setSelectedYear] = useState<number>(realCurrentYear);
 
-  // Helper para solicitar pantalla completa de forma segura con soporte para múltiples navegadores
-  const requestFullscreenSafe = () => {
-    try {
-      const docEl = document.documentElement as any;
-      const reqFs = docEl.requestFullscreen || 
-                    docEl.webkitRequestFullscreen || 
-                    docEl.mozRequestFullScreen || 
-                    docEl.msRequestFullscreen;
-      
-      if (reqFs) {
-        reqFs.call(docEl).catch((err: any) => {
-          console.log("Pantalla completa diferida o no permitida sin interacción previa del usuario:", err);
-        });
-      }
-    } catch (e) {
-      console.warn("API de pantalla completa de HTML5 no soportada en este navegador:", e);
-    }
-  };
-
   // Splash animation triggers
   useEffect(() => {
     // 1. Scale animation completes in 3.5s and holds.
@@ -152,8 +133,6 @@ export default function App() {
     // 3. At 6.2s, we completely hide the splash screen.
     const hideTimer = setTimeout(() => {
       setShowSplash(false);
-      // Pasar automáticamente a modo pantalla completa al terminar la presentación
-      requestFullscreenSafe();
     }, 6200);
 
     return () => {
@@ -357,9 +336,7 @@ export default function App() {
             animate={{ opacity: fadeSplash ? 0 : 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 text-white cursor-pointer"
-            onClick={requestFullscreenSafe}
-            onTouchStart={requestFullscreenSafe}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 text-white"
           >
             <div className="flex flex-col items-center px-4 max-w-full text-center">
               <motion.div
@@ -631,7 +608,7 @@ export default function App() {
 
                 <div className="grid grid-cols-2 gap-3" id="uvw-radio-buttons">
                   <button
-                    onClick={() => handleUvwRotationChange('normal')}
+                     onClick={() => handleUvwRotationChange('normal')}
                     className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-pointer ${
                       uvwRotation === 'normal'
                         ? 'bg-slate-900 border-red-500 ring-1 ring-red-500/20 text-white'
@@ -667,8 +644,6 @@ export default function App() {
           </AnimatePresence>
 
         </main>
-
-
 
       </div>
 
