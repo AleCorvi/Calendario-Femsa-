@@ -514,10 +514,10 @@ export default function App() {
               <h2 className="text-5xl sm:text-6xl font-extrabold tracking-tight text-white flex items-center justify-center gap-1">
                 Planta Alcorta
               </h2>
-              <p className="text-[11px] text-gray-400 font-mono uppercase tracking-widest leading-none mt-1">
+              <p className="text-[12px] text-gray-400 font-mono uppercase tracking-widest leading-none mt-1">
                 Versión 3.45 WEB
               </p>
-              <p className="text-[11px] text-gray-400 font-bold italic mt-1 leading-none">
+              <p className="text-[12px] text-gray-400 font-bold italic mt-1 leading-none">
                 by Ale Corvi © 2026
               </p>
             </div>
