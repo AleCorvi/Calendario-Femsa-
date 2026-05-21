@@ -511,7 +511,7 @@ export default function App() {
             id="femsa-header-title-btn"
           >
             <div className="text-center">
-              <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white flex items-center justify-center gap-1">
+              <h2 className="text-5xl sm:text-6xl font-extrabold tracking-tight text-white flex items-center justify-center gap-1">
                 Planta Alcorta
               </h2>
               <p className="text-[9px] text-gray-400 font-mono uppercase tracking-widest leading-none">
