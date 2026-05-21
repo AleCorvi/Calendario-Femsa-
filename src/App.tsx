@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Calendar,
@@ -16,6 +16,8 @@ import {
   Settings2,
   CalendarDays,
   Sparkles,
+  Smartphone,
+  RotateCw,
 } from 'lucide-react';
 
 import { ShiftType, UVWRotation } from './types';
@@ -43,34 +45,110 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [fadeSplash, setFadeSplash] = useState(false);
 
+  // Device and orientation detection
+  const [isMobile, setIsMobile] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
+
+  useEffect(() => {
+    const checkDevice = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      
+      // UA string check covers most mobile devices
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      // Treat any viewport width under 768px as mobile-scale
+      const isMobileScreen = width < 768;
+      
+      setIsMobile(isMobileUA || isMobileScreen);
+      setIsLandscape(width > height);
+    };
+
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    window.addEventListener('orientationchange', checkDevice);
+    return () => {
+      window.removeEventListener('resize', checkDevice);
+      window.removeEventListener('orientationchange', checkDevice);
+    };
+  }, []);
+
+  // Ref for measuring calendar date cell height to keep navigation buttons aligned
+  const cellRef = useRef<HTMLButtonElement>(null);
+  const [dayCellHeight, setDayCellHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!cellRef.current) return;
+    
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const height = entry.borderBoxSize?.[0]?.blockSize ?? entry.contentRect.height;
+        if (height > 0) {
+          setDayCellHeight(height);
+        }
+      }
+    });
+    
+    resizeObserver.observe(cellRef.current);
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
   // Modal states
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [detailDay, setDetailDay] = useState<number | null>(null);
 
-  // Secret trigger for UVW rotation panel (3 taps on FRANCO button)
-  const [francoClickCount, setFrancoClickCount] = useState(0);
-  const [lastFrancoClickTime, setLastFrancoClickTime] = useState(0);
+  // Secret trigger for UVW rotation panel (3-second long press on FRANCO button)
   const [showUvwConfig, setShowUvwConfig] = useState(false);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isLongPressRef = useRef(false);
 
   const handleFrancoClick = () => {
     // Reset calendar to current actual month and year
     setSelectedMonth(nombreMes(realCurrentMonthIdx + 1));
     setSelectedYear(realCurrentYear);
+  };
 
-    const now = Date.now();
-    if (now - lastFrancoClickTime > 2000) {
-      setFrancoClickCount(1);
-      setLastFrancoClickTime(now);
-    } else {
-      const nextCount = francoClickCount + 1;
-      if (nextCount >= 3) {
-        setShowUvwConfig(prev => !prev);
-        setFrancoClickCount(0);
-        setLastFrancoClickTime(0);
-      } else {
-        setFrancoClickCount(nextCount);
-        setLastFrancoClickTime(now);
+  const handleFrancoPointerDown = (e: React.PointerEvent) => {
+    // Only respond to main click/touch pointer
+    if (e.button !== 0) return;
+    isLongPressRef.current = false;
+    
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+    }
+    
+    longPressTimerRef.current = setTimeout(() => {
+      isLongPressRef.current = true;
+      setShowUvwConfig((prev) => !prev);
+      
+      // Attempt slight haptic vibration feedback for physical validation
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate(120);
+        } catch (_) {}
       }
+    }, 3000); // 3 seconds
+  };
+
+  const handleFrancoPointerUp = (e: React.PointerEvent) => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    
+    // If released before 3 seconds, fire normal click behavior (Go to Today)
+    if (!isLongPressRef.current) {
+      handleFrancoClick();
+    }
+    isLongPressRef.current = false;
+  };
+
+  const handleFrancoPointerLeave = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
     }
   };
 
@@ -327,6 +405,41 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-900 text-gray-100 font-sans flex flex-col justify-between selection:bg-red-500 selection:text-white" id="main-view-container">
       
+      {/* 3. PORTRAIT LOCK OVERLAY FOR MOBILE DEVICES ON LANDSCAPE */}
+      <AnimatePresence>
+        {isMobile && isLandscape && (
+          <motion.div
+            id="mobile-portrait-lock-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 p-6 text-center text-white"
+          >
+            <div className="relative mb-6 flex items-center justify-center">
+              <motion.div
+                animate={{ rotate: [0, -90, -90, 0, 0] }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  repeatDelay: 1,
+                  ease: "easeInOut",
+                }}
+                className="relative z-10"
+              >
+                <Smartphone className="w-16 h-16 text-red-500" />
+              </motion.div>
+              <div className="absolute inset-0 bg-red-600/20 rounded-full blur-xl scale-125 animate-pulse" />
+            </div>
+            <h3 className="text-xl font-extrabold tracking-tight text-white mb-2">
+              Modo Retrato Requerido
+            </h3>
+            <p className="text-sm text-slate-400 max-w-xs leading-relaxed">
+              Para conservar la simetría y relación de aspecto de tu calendario, por favor gira tu teléfono a <span className="text-red-400 font-bold">modo vertical (Retrato)</span>.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 1. BRANDED ANIMATED SPLASH SCREEN */}
       <AnimatePresence>
         {showSplash && (
@@ -383,7 +496,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* 2. MAIN APPLICATION CONTENT */}
-      <div className="w-full max-w-lg mx-auto flex-1 flex flex-col justify-between bg-slate-900 border-x border-slate-800 shadow-2xl relative overflow-hidden">
+      <div className="w-full max-w-lg md:max-w-4xl lg:max-w-5xl mx-auto flex-1 flex flex-col justify-between bg-slate-900 border-x border-slate-800 shadow-2xl relative overflow-hidden">
         
         {/* Glow effect headers */}
         <div className="absolute top-0 left-1/4 w-1/2 h-32 bg-red-500/10 blur-3xl pointer-events-none rounded-full" />
@@ -398,8 +511,8 @@ export default function App() {
             id="femsa-header-title-btn"
           >
             <div className="text-center">
-              <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center justify-center gap-1">
-                Calendario Planta Alcorta
+              <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white flex items-center justify-center gap-1">
+                Planta Alcorta
               </h2>
               <p className="text-[9px] text-gray-400 font-mono uppercase tracking-widest leading-none">
                 Versión 3.45 WEB
@@ -412,236 +525,266 @@ export default function App() {
         </header>
 
         {/* CONTAINER CONTENT */}
-        <main className="px-4 pt-2 pb-4 space-y-3 flex-1 flex flex-col justify-start">
+        <main className="px-4 pt-2 pb-4 flex-1 flex flex-col md:grid md:grid-cols-12 md:gap-5 md:space-y-0 space-y-3 justify-start md:items-start items-stretch">
           
-          {/* SECTION A: DROP DOWN CONTROLS */}
-          <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 space-y-4 shadow-inner" id="picker-controls">
+          {/* LEFT SIDE: SELECTORS & CONFIG (on PC/Tablet) */}
+          <div className="col-span-12 md:col-span-4 flex flex-col gap-4 justify-start w-full">
             
-            {/* Top row: selectors */}
-            <div className="grid grid-cols-3 gap-3 items-end">
+            {/* SECTION A: DROP DOWN CONTROLS */}
+            <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 space-y-4 shadow-inner" id="picker-controls">
               
-              {/* Spinner 1: Month Selection */}
-              <div className="flex flex-col gap-1">
-                <div className="relative">
-                  <select
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    className={`w-full p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-sm font-bold tracking-wide focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 cursor-pointer appearance-none ${
-                      isMonthActual ? 'text-white' : 'text-red-500 font-extrabold'
-                    }`}
-                    id="combo1-month-select"
-                  >
-                    {monthsList.map((m) => (
-                      <option key={m} value={m} className="bg-slate-950 text-white font-mono font-medium">
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
-                    ▼
+              {/* Top row: selectors - row on mobile, vertical stack on PC/Tablet */}
+              <div className="grid grid-cols-3 md:grid-cols-1 gap-3 md:gap-4 items-stretch">
+                
+                {/* Spinner 1: Month Selection */}
+                <div className="flex flex-col gap-1">
+                  <span className="hidden md:block text-[11px] font-bold text-slate-400 font-mono uppercase tracking-wider">
+                    Mes de Consulta
+                  </span>
+                  <div className="relative">
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) => setSelectedMonth(e.target.value)}
+                      className={`w-full p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-sm font-bold tracking-wide focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 cursor-pointer appearance-none ${
+                        isMonthActual ? 'text-white' : 'text-red-500 font-extrabold'
+                      }`}
+                      id="combo1-month-select"
+                    >
+                      {monthsList.map((m) => (
+                        <option key={m} value={m} className="bg-slate-950 text-white font-mono font-medium">
+                          {m}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
+                      ▼
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Spinner 2: Year Selection */}
-              <div className="flex flex-col gap-1">
-                <div className="relative">
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-                    className={`w-full p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-sm font-bold tracking-wide focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 cursor-pointer appearance-none ${
-                      isYearActual ? 'text-white' : 'text-red-500 font-extrabold'
-                    }`}
-                    id="combo2-year-select"
-                  >
-                    {yearsList.map((y) => (
-                      <option key={y} value={y} className="bg-slate-950 text-white font-mono font-medium">
-                        {y}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
-                    ▼
+                {/* Spinner 2: Year Selection */}
+                <div className="flex flex-col gap-1">
+                  <span className="hidden md:block text-[11px] font-bold text-slate-400 font-mono uppercase tracking-wider">
+                    Año de Consulta
+                  </span>
+                  <div className="relative">
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
+                      className={`w-full p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-sm font-bold tracking-wide focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 cursor-pointer appearance-none ${
+                        isYearActual ? 'text-white' : 'text-red-500 font-extrabold'
+                      }`}
+                      id="combo2-year-select"
+                    >
+                      {yearsList.map((y) => (
+                        <option key={y} value={y} className="bg-slate-950 text-white font-mono font-medium">
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
+                      ▼
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Spinner 3: Group Selection */}
-              <div className="flex flex-col gap-1">
-                <div className="relative">
-                  <select
-                    value={selectedGroup}
-                    onChange={(e) => handleGroupChange(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-white text-sm font-bold tracking-wider focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 cursor-pointer appearance-none"
-                    id="combo3-group-select"
-                  >
-                    {groupsList.map((g) => (
-                      <option key={g} value={g} className="bg-slate-950 text-white font-mono font-medium">
-                        Grupo {g.trim()}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
-                    ▼
+                {/* Spinner 3: Group Selection */}
+                <div className="flex flex-col gap-1">
+                  <span className="hidden md:block text-[11px] font-bold text-slate-400 font-mono uppercase tracking-wider">
+                    Grupo de Turno
+                  </span>
+                  <div className="relative">
+                    <select
+                      value={selectedGroup}
+                      onChange={(e) => handleGroupChange(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-white text-sm font-bold tracking-wider focus:outline-hidden focus:border-red-500 focus:ring-1 focus:ring-red-500 cursor-pointer appearance-none"
+                      id="combo3-group-select"
+                    >
+                      {groupsList.map((g) => (
+                        <option key={g} value={g} className="bg-slate-950 text-white font-mono font-medium">
+                          Grupo {g.trim()}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
+                      ▼
+                    </div>
                   </div>
                 </div>
+
               </div>
 
+              {/* Red alert text warning if not current month/year */}
+              {!isDefaultSelected && (
+                <p className="text-center text-[11px] font-semibold text-red-500 animate-pulse leading-snug">
+                  ⚠️ Alerta: Estás consultando un mes o año diferente al actual.
+                </p>
+              )}
             </div>
 
-            {/* Red alert text warning if not current month/year */}
-            {!isDefaultSelected && (
-              <p className="text-center text-[11px] font-semibold text-red-500 animate-pulse leading-snug">
-                ⚠️ Alerta: Estás consultando un mes o año diferente al actual.
-              </p>
-            )}
+
           </div>
 
-          {/* SECTION B: SHIFT CALENDAR GRID */}
-          <div className="bg-slate-950/80 p-3 sm:p-4 rounded-2xl border border-slate-800 shadow-lg" id="calendar-grid-card">
+          {/* RIGHT SIDE: CALENDAR GRID (on PC/Tablet) */}
+          <div className="col-span-12 md:col-span-8 flex flex-col justify-start md:max-w-[450px] md:mx-auto w-full">
             
-            {/* Weekday headers LU to DO */}
-            <div className="grid grid-cols-7 text-center pb-1 border-b border-slate-800">
-              {['LU', 'MA', 'MI', 'JU', 'VI', 'SA', 'DO'].map((dayName) => (
-                <span
-                  key={dayName}
-                  className={`text-xs font-bold tracking-wider py-0.5 ${
-                    ['SA', 'DO'].includes(dayName) ? 'text-red-400' : 'text-slate-400'
-                  }`}
+            {/* SECTION B: SHIFT CALENDAR GRID */}
+            <div className="bg-slate-950/80 p-3 sm:p-4 rounded-2xl border border-slate-800 shadow-lg h-full flex flex-col justify-between" id="calendar-grid-card">
+              
+              <div>
+                {/* Weekday headers LU to DO */}
+                <div className="grid grid-cols-7 text-center pb-1 border-b border-slate-800">
+                  {['LU', 'MA', 'MI', 'JU', 'VI', 'SA', 'DO'].map((dayName) => (
+                    <span
+                      key={dayName}
+                      className={`text-xs font-bold tracking-wider py-0.5 ${
+                        ['SA', 'DO'].includes(dayName) ? 'text-red-400' : 'text-slate-400'
+                      }`}
+                    >
+                      {dayName}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Grid Days - exactly 42 slots */}
+                <div className="grid grid-cols-7 gap-1.5 pt-[30px] pb-0">
+                  {cells.map((cell, idx) => {
+                    const isToday =
+                      cell.day !== null &&
+                      isMonthActual &&
+                      isYearActual &&
+                      cell.day === realCurrentDay;
+
+                    const style = getShiftCellStyles(cell.shift, isToday);
+
+                    return (
+                      <button
+                        key={idx}
+                        ref={idx === 0 ? cellRef : undefined}
+                        onClick={() => {
+                          if (cell.day !== null) {
+                            setDetailDay(cell.day);
+                          }
+                        }}
+                        disabled={cell.day === null}
+                        className={`relative aspect-square flex items-center justify-center rounded-lg text-sm transition-all focus:outline-hidden ${
+                          cell.day !== null
+                            ? 'cursor-pointer transform active:scale-95'
+                            : 'opacity-20 cursor-default'
+                        } ${style.bg}`}
+                        id={`calendar-cell-${idx}`}
+                      >
+                        <span className={`${style.text} ${isToday ? 'animate-scale-pulse' : ''}`}>
+                          {cell.day !== null ? cell.day : ''}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Previous, Home/Franco & Next navigation styled as Mañana, Franco & Noche buttons */}
+              <div className="grid grid-cols-3 gap-2 mt-[30px] pt-3 border-t border-slate-800" id="month-navigation-controls">
+                
+                {/* Previous month (Mañana reference) */}
+                <button
+                  onClick={handlePrevMonth}
+                  className="flex items-center justify-center gap-1 px-0.5 bg-linear-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 active:from-yellow-600 active:to-yellow-700 text-slate-950 font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
+                  style={{ height: dayCellHeight ? `${dayCellHeight}px` : '42px' }}
+                  id="prev-month-btn"
+                  title="Ir al mes anterior (Mañana)"
                 >
-                  {dayName}
-                </span>
-              ))}
-            </div>
+                  <ChevronLeft className="w-3.5 h-3.5 text-slate-950 shrink-0" />
+                  <span className="font-mono tracking-wider font-extrabold text-[11px] uppercase">MAÑANA</span>
+                </button>
 
-            {/* Grid Days - exactly 42 slots */}
-            <div className="grid grid-cols-7 gap-1.5 pt-[30px] pb-0">
-              {cells.map((cell, idx) => {
-                const isToday =
-                  cell.day !== null &&
-                  isMonthActual &&
-                  isYearActual &&
-                  cell.day === realCurrentDay;
+                {/* Reset to Today (Franco reference and Secret Config trigger) */}
+                <button
+                  onPointerDown={handleFrancoPointerDown}
+                  onPointerUp={handleFrancoPointerUp}
+                  onPointerLeave={handleFrancoPointerLeave}
+                  onPointerCancel={handleFrancoPointerLeave}
+                  onContextMenu={(e) => e.preventDefault()}
+                  className="select-none flex flex-col items-center justify-center px-0.5 bg-linear-to-r from-[#5aff5a] to-[#257500] hover:from-[#6fff6f] hover:to-[#2e9200] text-slate-950 font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
+                  style={{ height: dayCellHeight ? `${dayCellHeight}px` : '42px' }}
+                  id="franco-today-btn"
+                  title="Volver a Hoy (Franco) / Mantén presionado 3 segundos para Configuración UVW"
+                >
+                  <span className="font-mono tracking-wider font-extrabold text-[11px] uppercase">FRANCO</span>
+                </button>
 
-                const style = getShiftCellStyles(cell.shift, isToday);
+                {/* Next month (Noche reference) */}
+                <button
+                  onClick={handleNextMonth}
+                  className="flex items-center justify-center gap-1 px-0.5 bg-linear-to-r from-[#fd4ecc] to-[#b60c9e] hover:from-[#fe6bda] hover:to-[#cc11b2] text-white font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
+                  style={{ height: dayCellHeight ? `${dayCellHeight}px` : '42px' }}
+                  id="next-month-btn"
+                  title="Ir al mes siguiente (Noche)"
+                >
+                  <span className="font-mono tracking-wider font-extrabold text-[11px] uppercase">NOCHE</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-white shrink-0" />
+                </button>
 
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      if (cell.day !== null) {
-                        setDetailDay(cell.day);
-                      }
-                    }}
-                    disabled={cell.day === null}
-                    className={`relative aspect-square flex items-center justify-center rounded-lg text-sm transition-all focus:outline-hidden ${
-                      cell.day !== null
-                        ? 'cursor-pointer transform active:scale-95'
-                        : 'opacity-20 cursor-default'
-                    } ${style.bg}`}
-                    id={`calendar-cell-${idx}`}
-                  >
-                    <span className={`${style.text} ${isToday ? 'animate-scale-pulse' : ''}`}>
-                      {cell.day !== null ? cell.day : ''}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Previous, Home/Franco & Next navigation styled as Mañana, Franco & Noche buttons */}
-            <div className="grid grid-cols-3 gap-2 mt-[30px] pt-3 border-t border-slate-800" id="month-navigation-controls">
-              
-              {/* Previous month (Mañana reference) */}
-              <button
-                onClick={handlePrevMonth}
-                className="h-[45px] flex items-center justify-center gap-1 px-0.5 bg-linear-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 active:from-yellow-600 active:to-yellow-700 text-slate-950 font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
-                id="prev-month-btn"
-                title="Ir al mes anterior (Mañana)"
-              >
-                <ChevronLeft className="w-3.5 h-3.5 text-slate-950 shrink-0" />
-                <span className="font-mono tracking-wider font-extrabold text-[11px] uppercase">MAÑANA</span>
-              </button>
-
-              {/* Reset to Today (Franco reference and Secret Config trigger) */}
-              <button
-                onClick={handleFrancoClick}
-                className="h-[45px] flex flex-col items-center justify-center px-0.5 bg-linear-to-r from-[#5aff5a] to-[#257500] hover:from-[#6fff6f] hover:to-[#2e9200] text-slate-950 font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
-                id="franco-today-btn"
-                title="Volver a Hoy (Franco) / Toca 3 veces para Configuración UVW"
-              >
-                <span className="font-mono tracking-wider font-extrabold text-[11px] uppercase">FRANCO</span>
-              </button>
-
-              {/* Next month (Noche reference) */}
-              <button
-                onClick={handleNextMonth}
-                className="h-[45px] flex items-center justify-center gap-1 px-0.5 bg-linear-to-r from-[#fd4ecc] to-[#b60c9e] hover:from-[#fe6bda] hover:to-[#cc11b2] text-white font-bold rounded-xl shadow-md cursor-pointer transition-all active:scale-98 text-center"
-                id="next-month-btn"
-                title="Ir al mes siguiente (Noche)"
-              >
-                <span className="font-mono tracking-wider font-extrabold text-[11px] uppercase">NOCHE</span>
-                <ChevronRight className="w-3.5 h-3.5 text-white shrink-0" />
-              </button>
+              </div>
 
             </div>
+
+            {/* SECTION D: UVW CONFIGURATION ROTATION */}
+            <AnimatePresence>
+              {showUvwConfig && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, y: 10 }}
+                  animate={{ opacity: 1, height: 'auto', y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: 10 }}
+                  transition={{ duration: 0.25, ease: 'easeInOut' }}
+                  className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-3 overflow-hidden animate-fade-in mt-4"
+                  id="uvw-rotation-panel"
+                >
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <Settings2 className="w-4 h-4 text-slate-400" />
+                    <h4 className="text-[11px] text-slate-400 font-mono font-bold uppercase tracking-wider">
+                      Configuración Rotación UVW (referencia FRANCO)
+                    </h4>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3" id="uvw-radio-buttons">
+                    <button
+                      onClick={() => handleUvwRotationChange('normal')}
+                      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-pointer ${
+                        uvwRotation === 'normal'
+                          ? 'bg-slate-900 border-red-500 ring-1 ring-red-500/20 text-white'
+                          : 'bg-slate-950/50 border-slate-800 text-slate-400 hover:bg-slate-900/50 hover:text-slate-300'
+                      }`}
+                      id="uvw-rot-normal-btn"
+                    >
+                      <Sun className="w-4 h-4 mb-1 text-yellow-400 shrink-0 animate-spin-slow" />
+                      <span className="text-xs font-semibold">Rotación Normal</span>
+                      <span className="text-[9px] font-mono text-slate-500 text-center leading-none mt-1">
+                        Viernes y Sábado Franco
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => handleUvwRotationChange('changed')}
+                      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-pointer ${
+                        uvwRotation === 'changed'
+                          ? 'bg-slate-900 border-red-500 ring-1 ring-red-500/20 text-white'
+                          : 'bg-slate-950/50 border-slate-800 text-slate-400 hover:bg-slate-900/50 hover:text-slate-300'
+                      }`}
+                      id="uvw-rot-changed-btn"
+                    >
+                      <Moon className="w-4 h-4 mb-1 text-slate-400 shrink-0" />
+                      <span className="text-xs font-semibold">Rotación Cambiada</span>
+                      <span className="text-[9px] font-mono text-slate-500 text-center leading-none mt-1">
+                        Jueves y Viernes Franco
+                      </span>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
           </div>
-
-          {/* SECTION D: UVW CONFIGURATION ROTATION */}
-          <AnimatePresence>
-            {showUvwConfig && (
-              <motion.div
-                initial={{ opacity: 0, height: 0, y: 10 }}
-                animate={{ opacity: 1, height: 'auto', y: 0 }}
-                exit={{ opacity: 0, height: 0, y: 10 }}
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
-                className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-3 overflow-hidden"
-                id="uvw-rotation-panel"
-              >
-                <div className="flex items-center gap-2 text-slate-300">
-                  <Settings2 className="w-4 h-4 text-slate-400" />
-                  <h4 className="text-[11px] text-slate-400 font-mono font-bold uppercase tracking-wider">
-                    Configuración Rotación UVW (referencia FRANCO)
-                  </h4>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3" id="uvw-radio-buttons">
-                  <button
-                     onClick={() => handleUvwRotationChange('normal')}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-pointer ${
-                      uvwRotation === 'normal'
-                        ? 'bg-slate-900 border-red-500 ring-1 ring-red-500/20 text-white'
-                        : 'bg-slate-950/50 border-slate-800 text-slate-400 hover:bg-slate-900/50 hover:text-slate-300'
-                    }`}
-                    id="uvw-rot-normal-btn"
-                  >
-                    <Sun className="w-4 h-4 mb-1 text-yellow-400 shrink-0 animate-spin-slow" />
-                    <span className="text-xs font-semibold">Rotación Normal</span>
-                    <span className="text-[9px] font-mono text-slate-500 text-center leading-none mt-1">
-                      Viernes y Sábado Franco
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => handleUvwRotationChange('changed')}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-pointer ${
-                      uvwRotation === 'changed'
-                        ? 'bg-slate-900 border-red-500 ring-1 ring-red-500/20 text-white'
-                        : 'bg-slate-950/50 border-slate-800 text-slate-400 hover:bg-slate-900/50 hover:text-slate-300'
-                    }`}
-                    id="uvw-rot-changed-btn"
-                  >
-                    <Moon className="w-4 h-4 mb-1 text-slate-400 shrink-0" />
-                    <span className="text-xs font-semibold">Rotación Cambiada</span>
-                    <span className="text-[9px] font-mono text-slate-500 text-center leading-none mt-1">
-                      Jueves y Viernes Franco
-                    </span>
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
         </main>
 
